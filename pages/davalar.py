@@ -64,8 +64,5 @@ def davalar_sayfasi():
 # pages/davalar.py dosyasının en son satırı:
 if __name__ == "__main__":
     davalar_sayfasi()
-else:
-    # Eğer app.py içinden çağırılıyorsa yine çalışsın
-    davalar_sayfasi()
 
 
