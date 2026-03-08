@@ -86,7 +86,7 @@ else:
         elif menu == "📅 Taksit Takip":
             from pages.taksitler import taksit_sayfasi
             taksit_sayfasi()
-        elif menu == "📄 Belge Sihirbazı":
+        elif menu == "📄 Belge Sihirbazi":
             from pages.belge_sihirbazi import belge_sihirbazi_sayfasi
             belge_sihirbazi_sayfasi()
 
