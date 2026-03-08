@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 from database import get_connection
 
-def kasa_sayfasi():
+def kasa_sayfasi(): # Bu isim app.py'deki import ile birebir aynı olmalı
+
     conn = get_connection()
     st.subheader("💰 Kasa ve Finans Yönetimi")
     

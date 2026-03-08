@@ -77,25 +77,34 @@ else:
         if menu == "📊 Genel Bakış":
             from pages.dashboard import dashboard_sayfasi
             dashboard_sayfasi()
+            
         elif menu == "📂 Dosya Yönetimi":
             from pages.davalar import davalar_sayfasi
             davalar_sayfasi()
+            
         elif menu == "💰 Kasa/Finans":
             try:
                 from pages.kasa import kasa_sayfasi
                 kasa_sayfasi()
+            except (ModuleNotFoundError, ImportError):
+                st.error("⚠️ 'pages/kasa.py' dosyası bulunamadı. Lütfen GitHub'da dosya adını ve yolunu kontrol edin.")
             except Exception as e:
-                st.error(f"Kasa modülü yüklenirken hata oluştu: {e}")
+                st.error(f"❌ Kasa modülü yüklenirken bir hata oluştu: {e}")
+
 
         elif menu == "📅 Taksit Takip":
             from pages.taksitler import taksit_sayfasi
             taksit_sayfasi()
+            
         elif menu == "📄 Belge Sihirbazı":
             try:
                 import pages.belge_sihirbazi as bs
                 bs.belge_sihirbazi_sayfasi()
+            except ModuleNotFoundError:
+                st.error("⚠️ 'pages/belge_sihirbazi.py' dosyası bulunamadı. Lütfen GitHub'da dosya adını kontrol edin.")
             except Exception as e:
-                st.error(f"Sihirbaz yüklenemedi: {e}")
+                st.error(f"❌ Bir hata oluştu: {e}")
+
 
 
     elif st.session_state.rol == "müvekkil":
