@@ -2,12 +2,16 @@ import sqlite3
 import psycopg2
 import streamlit as st
 import pandas as pd
+import streamlit as st
+
+
 
 # POSTGRESQL BAĞLANTISI (Bulut)
 # POSTGRESQL BAĞLANTISI (Bulut - Güncellendi: Tablo Oluşturma ve Admin Ekleme)
 def get_connection():
     try:
-        url = "postgresql://neondb_owner:npg_jC5idmTFc7pX@ep-broad-mud-aiehr9uw-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require"
+       
+        url = st.secrets["DB_URL"]
         conn = psycopg2.connect(url)
         conn.autocommit = True # Komutların anında işlenmesi için kritik
         cur = conn.cursor()
