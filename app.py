@@ -27,6 +27,15 @@ st.set_page_config(page_title="G-ERP Pro v18.6", layout="wide")
 # Veritabanı bağlantısını başlat
 conn = get_connection()
 
+# app.py içindeki giriş butonu altına geçici test kodu:
+if kod == "admin" and sifre == "9999":
+    st.session_state.giris_yapti = True
+    st.session_state.ad_soyad = "Yönetici"
+    st.session_state.rol = "avukat"
+    st.rerun()
+
+
+
 # 2. SESSION STATE (Oturum Yönetimi)
 if 'giris_yapti' not in st.session_state:
     st.session_state.giris_yapti = False
