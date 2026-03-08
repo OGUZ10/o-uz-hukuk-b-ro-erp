@@ -90,20 +90,19 @@ else:
                 st.error("⚠️ 'pages/kasa.py' dosyası bulunamadı. Lütfen GitHub'da dosya adını ve yolunu kontrol edin.")
             except Exception as e:
                 st.error(f"❌ Kasa modülü yüklenirken bir hata oluştu: {e}")
-
-
         elif menu == "📅 Taksit Takip":
             from pages.taksitler import taksit_sayfasi
             taksit_sayfasi()
             
         elif menu == "📄 Belge Sihirbazı":
             try:
-                import pages.belge_sihirbazi as bs
-                bs.belge_sihirbazi_sayfasi()
+                from pages.belge_sihirbazi import belge_sihirbazi_sayfasi
+                belge_sihirbazi_sayfasi()
             except ModuleNotFoundError:
                 st.error("⚠️ 'pages/belge_sihirbazi.py' dosyası bulunamadı. Lütfen GitHub'da dosya adını kontrol edin.")
             except Exception as e:
-                st.error(f"❌ Bir hata oluştu: {e}")
+                st.error(f"❌ Sihirbaz yüklenirken bir hata oluştu: {e}")
+
 
 
 
