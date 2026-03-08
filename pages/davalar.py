@@ -1,68 +1,85 @@
 import streamlit as st
 import pandas as pd
 from database import get_connection
-
-# 1. Veritabanı bağlantısını çek
-conn = get_connection()
-if conn is None:
-        st.error("Veritabanına bağlanılamadı! Lütfen database.py ayarlarını kontrol edin.")
-        st.stop()
-
+from datetime import datetime
 
 def davalar_sayfasi():
-    # 2. Yetki Kontrolü (Güvenlik için)
-    if not st.session_state.get('giris_yapti') or st.session_state.get('rol') != 'avukat':
-        st.error("⚠️ Bu sayfaya sadece Avukat yetkisiyle erişilebilir. Lütfen giriş yapın.")
-        return
-
     st.header("📂 Dosya ve Dava Yönetimi")
     
-    # --- YENİ DOSYA KAYDI FORMU ---
-    st.subheader("➕ Yeni Dosya Kaydı")
-    with st.form("yeni_dosya_formu", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            d_no = st.text_input("Dosya No (Örn: 2024/100)")
-            m_kod = st.text_input("Müvekkil Cari Kod (TC/Vergi)")
-        with col2:
-            k_taraf = st.text_input("Karşı Taraf")
-            asama = st.slider("Süreç Aşaması (%)", 0, 100, 10)
-        
-        kaydet = st.form_submit_button("Dosyayı Veritabanına İşle")
-        
-        if kaydet:
-            if d_no and m_kod:
-                try:
-                    with conn.cursor() as cur:
-                        sorgu = "INSERT INTO davalar (dosya_no, muvekkil_kod, karsi_taraf, surec_asamasi) VALUES (%s, %s, %s, %s)"
-                        cur.execute(sorgu, (d_no, m_kod, k_taraf, asama))
-                        st.success(f"✅ {d_no} nolu dosya başarıyla kaydedildi.")
-                        st.rerun() # Listeyi güncellemek için sayfayı yenile
-                except Exception as e:
-                    st.error(f"❌ Kayıt Hatası: {e}")
-            else:
-                st.warning("Lütfen Dosya No ve Müvekkil Kodunu doldurun.")
-
-    # --- MEVCUT DOSYALARI LİSTELEME ---
-    st.divider()
-    st.subheader("📋 Kayıtlı Dosyalar")
+    # Veritabanı bağlantısı
+    conn = get_connection()
     
-    try:
-        # Verileri çek
-        df_davalar = pd.read_sql_query("SELECT dosya_no, muvekkil_kod, karsi_taraf, surec_asamasi FROM davalar ORDER BY id DESC", conn)
+    # Üst Sekmeler: Listeleme ve Yeni Kayıt
+    tab1, tab2 = st.tabs(["📋 Dava Listesi", "➕ Yeni Dava Aç"])
+    
+    with tab1:
+        st.subheader("Aktif Dava Dosyaları")
         
-        if not df_davalar.empty:
-            # Sütun isimlerini güzelleştirelim
-            df_davalar.columns = ["Dosya No", "Müvekkil Kodu", "Karşı Taraf", "Aşama (%)"]
-            st.dataframe(df_davalar, use_container_width=True, hide_index=True)
-        else:
-            st.info("Henüz kayıtlı dosya bulunmuyor.")
-    except Exception as e:
-        st.error(f"Veriler listelenirken hata oluştu: {e}")
+        if conn:
+            try:
+                # Verileri çek (Örnek sorgu - tablo adlarınıza göre güncelleyin)
+                query = "SELECT id, dosya_no, muvekkil_ad, karsi_taraf, dava_turu, durum, acilis_tarihi FROM davalar ORDER BY acilis_tarihi DESC"
+                df = pd.read_sql_query(query, conn)
+                
+                # Arama ve Filtreleme
+                search = st.text_input("🔍 Dosya No veya Müvekkil Adı ile Ara", "")
+                if search:
+                    df = df[df['dosya_no'].str.contains(search, case=False) | df['muvekkil_ad'].str.contains(search, case=False)]
+                
+                # Renkli Durum Göstergesi (Opsiyonel Stil)
+                def color_durum(val):
+                    color = '#28a745' if val == 'Devam Ediyor' else '#dc3545' if val == 'Kapalı' else '#ffc107'
+                    return f'color: {color}; font-weight: bold'
 
-# Sayfayı ana programda çağırabilmek için çalıştır
-# pages/davalar.py dosyasının en son satırı:
-if __name__ == "__main__":
-    davalar_sayfasi()
+                st.dataframe(
+                    df,
+                    column_config={
+                        "id": None, # ID'yi gizle
+                        "dosya_no": "Dosya No",
+                        "muvekkil_ad": "Müvekkil",
+                        "karsi_taraf": "Karşı Taraf",
+                        "dava_turu": "Dava Türü",
+                        "durum": st.column_config.SelectboxColumn("Durum", options=["Devam Ediyor", "Karar Çıktı", "İstinaf", "Kapalı"]),
+                        "acilis_tarihi": st.column_config.DateColumn("Açılış Tarihi")
+                    },
+                    hide_index=True,
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.info("💡 Henüz kayıtlı dava bulunamadı veya tablo yapısı eksik. Lütfen veritabanını kontrol edin.")
 
-
+    with tab2:
+        st.subheader("Yeni Dosya Kartı Oluştur")
+        with st.form("yeni_dava_formu", clear_on_submit=True):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                dosya_no = st.text_input("Dosya No (Örn: 2024/150 Esas)")
+                muvekkil = st.text_input("Müvekkil Ad Soyad / Ünvan")
+                dava_turu = st.selectbox("Dava Türü", ["İş Davası", "Boşanma", "İcra Takibi", "Ceza", "Gayrimenkul", "Diğer"])
+            
+            with col2:
+                karsi_taraf = st.text_input("Karşı Taraf")
+                mahkeme = st.text_input("Mahkeme / Daire")
+                tarih = st.date_input("Dava Açılış Tarihi", value=datetime.now())
+            
+            detaylar = st.text_area("Dava Özeti ve Notlar")
+            
+            submit = st.form_submit_button("💾 Dosyayı Kaydet")
+            
+            if submit:
+                if dosya_no and muvekkil:
+                    try:
+                        cursor = conn.cursor()
+                        insert_query = """
+                            INSERT INTO davalar (dosya_no, muvekkil_ad, karsi_taraf, dava_turu, mahkeme, acilis_tarihi, detaylar, durum)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, 'Devam Ediyor')
+                        """
+                        cursor.execute(insert_query, (dosya_no, muvekkil, karsi_taraf, dava_turu, mahkeme, tarih, detaylar))
+                        conn.commit()
+                        st.success(f"✅ {dosya_no} numaralı dosya başarıyla sisteme işlendi.")
+                        st.balloons()
+                    except Exception as e:
+                        st.error(f"Kayıt sırasında hata oluştu: {e}")
+                else:
+                    st.warning("Lütfen zorunlu alanları (Dosya No ve Müvekkil) doldurun.")
